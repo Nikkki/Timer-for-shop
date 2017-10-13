@@ -3,15 +3,13 @@ var $confirmationMessageBlock = $('.js-confirmation-message');
 time_list = [
     {
         id: 113,
-        dateString: "2017-10-10  13:50:00",
+        dateString: '2017-10-13  20:00:00',
         serverTimezone : 7200,
         weekends: [3],
-
         start_hour: 9,
-        start_min: 45,
-        end_hour: 20,
+        start_min: 0,
+        end_hour: 18,
         end_min: 0
-
     }
 ];
 
@@ -35,7 +33,6 @@ $confirmationMessageBlock.each(function(index, message){
 
     time_list.forEach(function (time_item) {
         if (time_item.id == request_id) {
-            console.log('llfd');
             var timer = new Timer(time_item);
             //с БД приходит значение времени, соответствующее часовому поясу места нахождения сервера.
             // Переводим время начала отсчета(значение с БД) в часовую зону пользователя
@@ -43,55 +40,39 @@ $confirmationMessageBlock.each(function(index, message){
             //пришлось перевести отображение строки(en-US),
             //как у американцев, т.к. парсер путал месяц с днем
             // и соответственно неправильный расчет таймера шел
-            var str = (new Date(localTime * 1000)).toLocaleString('en-US'); 
-            timer.dateString = str;
-            var results = timer.mainCheck(); 
-            console.log(results);
+            timer.dateString = (new Date(localTime * 1000)).toLocaleString('en-US'); 
+            var now =  Math.floor(((new Date()).getTime())/1000),
+                startTime = Math.floor((new Date(timer.dateString).getTime())/1000),
+                workWeekCheck = timer.workWeekChecker(startTime,  now),
+                work_days = timer.getDifferenceDays(timer.dateString),
+                passed_time = 0;
             
-            if (results.result) {
-                //TODO: проверять выходной ли сейчас и нерабочее время(рабочего дня)
 
-                if(timer.checkWorkTime()) { 
-                $accept_warning.css('opacity', 1);
-                var sec  = results.time_left;
-                //Запуск таймера
-                var interval =  setInterval(function(){
-                    var timer_counter = timer.start(sec);
-                    $min.text(timer_counter.minutes);
-                    $sec.text(timer_counter.seconds);
-                    sec--;
-                    if (sec < 0){
-                        clearInterval(interval);
-                        $accept_warning.css('opacity', 0);     
-                        $accept_warning_shop_not_work.css('opacity', 0);                       
-                        $warning_msg.css('opacity', 1);
-                    }
-                }, 1000);
+            if (workWeekCheck.type ==='success' && workWeekCheck.result === true ){
+                if (work_days.length === 1){
+                    passed_time = timer.passedTimeOneDay();
                 } else {
-                    var date = new Date(timer.findNextWorkTime());
-                    //TODO: нужно передавать в startTimeCheck  -  true или false;   
-                    var startTimeCheck = timer.startTimeChecker(timer.dateString, false),
-                        start_work = ((timer.work_time.start_hour * 60 ) + timer.work_time.start_min) * 60,
-                        passed_time = startTimeCheck.passed_time;
-                    date.setHours(0,0,0,0);
-                    date.setSeconds(timer.time_interval_seconds + start_work - passed_time);   
-                                                                                     
-                    $accept_warning.css('opacity', 0);     
-                    $accept_warning_shop_not_work.css('opacity', 1);  
-                    $warning_msg.css('opacity', 0);
-                    console.log(passed_time);
-                    console.log((date.toLocaleString()));
-                    $count_down_end.text(date.toLocaleString());
+                    passed_time = timer.passedTimeAll({amountOfDays : work_days.length - 2});
                 }
+                console.log(passed_time);
+                if (passed_time < timer.time_interval_seconds){
+                    console.log('Ok');
+                    //Выводим радость
+                    if (timer.checkWorkTime()){
 
-
-            } else {
-                $accept_warning.css('opacity', 0);     
-                $accept_warning_shop_not_work.css('opacity', 0);  
-                $warning_msg.css('opacity', 1);
-                
+                    } else {
+                        var date = new Date(timer.findNextWorkTime());
+                        date.setHours(0,0,0,0);
+                        date.setSeconds(timer.time_interval_seconds + timer.work_start - passed_time);   
+                        $count_down_end.text(date.toLocaleString());
+                        $accept_warning_shop_not_work.css('opacity', 1);
+                    }
+                    return;
+                }
             }
-
+            //Выводим печаль-тоску
+            $warning_msg.css('opacity', 1);
+            return;
         }
     });
 });

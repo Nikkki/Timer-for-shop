@@ -1,5 +1,6 @@
 // ;(function(){
     function Timer(opt) {
+        opt = opt || {};
         this.time = opt.time || 0;
         this.work_time = {  // рабочее время магазина
             start_hour: opt.start_hour || 9,
@@ -7,7 +8,11 @@
             end_hour:   opt.end_hour   || 18,
             end_min:    opt.end_min    || 0
         };
-        this.weekends = opt.weekends || [6,0];//выходные дни по-умолчанию - 6-cб, 0-вс.
+        this.work_end = (this.work_time.end_hour * 60 + this.work_time.end_min) * 60; // сколько сек прошло от 00:00 до конца рабоч дня
+        
+        this.work_start = (this.work_time.start_hour * 60 + this.work_time.start_min) * 60; // сколько сек прошло от 00:00 до начала рабоч дня
+        
+        this.weekends = opt.weekends || [6, 0];//выходные дни по-умолчанию - 6-cб, 0-вс.
         this.serverTimezone = opt.serverTimezone || 7200; // часовой пояс сервера
 
         this.time_interval_minutes = opt.time_interval_minutes || 30; //время, которое дается, чтобы принять заказ(в минутах)
@@ -126,138 +131,14 @@
         console.log(days + '   ' +  weekends);
         return days.diff(weekends);
     };
+   
 
     /**
-    * @param startTime {number} - начальное время в секундах
-    *
-    * @param isToday {boolean}  - сегодняшний ли день
-    * **/
-    Timer.prototype.startTimeChecker = function (startTime, isToday, endTime) {
-        var time   = new Date(startTime),
-            endTime = (endTime) ? new Date(endTime) : new Date(),
-            seconds = time.getSeconds(),
-            minutes = time.getMinutes(),
-            hours = time.getHours(),
-            endTime_h = endTime.getHours(),
-            endTime_m = endTime.getMinutes(),
-            endTime_s = endTime.getSeconds(),
-            secondsEndTime = (endTime_h * 60 + endTime_m) * 60 + endTime_s,
-            secondsStartTime = (hours * 60 + minutes) * 60 + seconds,
-            work_start = (this.work_time.start_hour * 60 + this.work_time.start_min) * 60,
-            work_end = (this.work_time.end_hour * 60 + this.work_time.end_min) * 60;
-
-        if ((work_start <= secondsStartTime) && (secondsStartTime <= work_end)) {
-            console.log('==========');
-            if ((secondsEndTime - secondsStartTime < this.time_interval_seconds) && !isToday){
-                return {
-                    result: true,
-                    passed_time: work_end - secondsStartTime
-                };
-            } else if ((secondsEndTime - secondsStartTime > this.time_interval_seconds) && isToday) {
-                return {
-                    result: true,
-                    passed_time: secondsEndTime - secondsStartTime
-                };
-            } else {
-                return {
-                    result: false
-                };
-            }
-        } else {
-            if (secondsStartTime < work_start) {
-                return {
-                    result: true,
-                    passed_time: 0
-                };
-            }
-        }
-    };
-
-    /**
-    * @param passed_time {number} - время уже которое натрекано на данный момент(в сек)
-     * **/
-    Timer.prototype.nowTimeChecker = function (passed_time) {
-        var date = new Date(),
-            seconds = date.getSeconds(),
-            minutes = date.getMinutes(),
-            hours = date.getHours(),
-            getDate = date.getDate(),
-            month = date.getMonth(),
-            year = date.getYear(),
-            secondsNow = (hours * 60 + minutes) * 60 + seconds, //сколько прошло секунд от 00:00 до данного момента,
-            startTime = new Date(this.dateString),
-            startTimeSeconds = (startTime.getHours() * 60 + startTime.getMinutes()) * 60 + startTime.getSeconds(),
-            work_start = (this.work_time.start_hour * 60 + this.work_time.start_min) * 60, // сколько сек прошло от 00:00 до начала рабоч дня
-            work_end = (this.work_time.end_hour * 60 + this.work_time.end_min) * 60, // сколько сек прошло от 00:00 до конца рабоч дня
-            time_left;
-        // console.log('seconds work interval ' + this.time_interval_seconds);
-        // console.log('passed_time  '+ passed_time);
-        console.log('seconds now  ' + secondsNow);
-        // console.log('work_start   ' + work_start);
-        // console.log('work_end   ' + work_end);
-        console.log('startTime Seconds ' + startTimeSeconds );
-
-
-
-        if ((work_start <= secondsNow) && (secondsNow <= work_end))  { 
-            if(passed_time === 0){
-                //Проверяем сегодня ли покупатель сделал заказ
-                if (getDate === startTime.getDate() &&
-                    month   === startTime.getMonth() &&
-                    year    === startTime.getYear())
-                    {
-                        time_left = secondsNow - startTimeSeconds;
-                    } else {
-                        return {
-                            result: true,
-                            time_left : secondsNow - work_start
-                        };
-                    }
-                if (time_left > this.time_interval_seconds){
-                    return {
-                        result: false
-                    };
-                } else {
-                    return {
-                        result: true,
-                        time_left: this.time_interval_seconds - time_left
-                    };
-                }
-
-            } else if (passed_time > 0) {
-                time_left = secondsNow - startTimeSeconds + passed_time;
-            }
-            if (time_left > this.time_interval_seconds){
-                return {
-                    result: false
-                };
-            } else {
-                return {
-                    result: true,
-                    time_left: this.time_interval_seconds - time_left
-                };
-            }
-
-        } else {
-            if (secondsNow < work_start){
-                return {
-                    result: true,
-                    time_left: time_left
-                };
-            } else {
-                return {
-                    result: false
-                };
-            }
-        }
-    };
-
-/**
-* запуска отсчет таймера
-* @param sec {number} - сколько осталось секунд
-* @return seconds {string} - сколько сек осталось (0-59) 
-* @return minutes {string} - сколько минут осталось (0-59)           
-*/
+    * запуска отсчет таймера
+    * @param sec {number} - сколько осталось секунд
+    * @return seconds {string} - сколько сек осталось (0-59) 
+    * @return minutes {string} - сколько минут осталось (0-59)           
+    */
     Timer.prototype.start = function (sec) {
         var timeObj = this.toHumanTime(sec, ['seconds', 'minutes', 'hours']),
             seconds = timeObj.seconds,
@@ -282,73 +163,102 @@
         };
     };
 
-    Timer.prototype.mainCheck = function (endTime) {
-        var now = endTime ? Math.floor(((new Date(endTime)).getTime())/1000) : Math.floor(((new Date()).getTime())/1000),
-            startTime = Math.floor((new Date(this.dateString).getTime())/1000),
-            workWeekCheck = this.workWeekChecker(startTime,  now),
-            diff_days = this.getDifferenceDays(this.dateString),
-            nowTimeChecker;
-        //1-ый этап проверки
-      //  console.log(workWeekCheck);
-        if (workWeekCheck.type ==='success' && workWeekCheck.result === true ){
-            //2-ой этап проверки
-            if (diff_days.length <= 2){
-                if (workWeekCheck.difference_days > 0){
-                    var startTimeCheck = this.startTimeChecker(this.dateString);
-                    if (startTimeCheck.result){
-                        nowTimeChecker = this.nowTimeChecker(startTimeCheck.passed_time);
-                        if (nowTimeChecker.result){
-                            return {
-                                result: true,
-                                time_left: nowTimeChecker.time_left
-                            };
-                        } else {
-                            return {
-                                result: false
-                            };
-                        }
-                    } else {
-                        return {
-                            result: false
-                        };
-                    }
-                    //значит, что подтверждение от покупателя было, в тот же день, что и магазин зашел к себе на акк
-                } else if (workWeekCheck.difference_days === 0){
-                    var passed_time = 0;
-                    nowTimeChecker = this.nowTimeChecker(passed_time);
-                    console.log('time checker', nowTimeChecker);
-                    if (nowTimeChecker.result){
-                        return {
-                            result: true,
-                            time_left: nowTimeChecker.time_left
-                        };
-                    } else {
-                        return {
-                            result:  false
-                        };
-                    }
-                } else {
-                    return {
-                        result: false
-                    };
-                }
+    /**Сколько времени уже прошло, если отчет времени(заказ принял пользователь) начался в тот же, что и проходит проверка времени
+     * 
+     * @param {string} startTime - время, от которого начинается отсчет времени(в формате "2017-10-05 14:00:00")
+     * @param {string} endTime  - время, когда проходит проверка времени((в формате "2017-10-05 14:00:00"))
+     * @return {number} - сколько секунд прошло
+     */
+    Timer.prototype.passedTimeOneDay = function(endTime, startTime) {
+        var /*now*/ endDate   = endTime   ? new Date(endTime)   : new Date(),
+            /*startTime*/startDate = startTime ? new Date(startTime) : new Date(this.dateString),
+            secondsEnd = (endDate.getHours() * 60 + endDate.getMinutes()) * 60 + endDate.getSeconds(), //сколько прошло секунд от 00:00 до данного момента,
+            secondsStart = (startDate.getHours() * 60 + startDate.getMinutes()) * 60 + startDate.getSeconds(); //сколько прошло секунд от 00:00 до принятие заказа пользователем,
+        var passed_time = 0;
+        if ((this.work_start <= secondsEnd) && (secondsEnd <= this.work_end)){
+            if (secondsStart < this.work_start){
+                passed_time = secondsEnd - this.work_start;
             } else {
-                return {
-                    result: false
-                };
+                passed_time = secondsEnd - secondsStart;
             }
-        } else {
-            return {
-                result: false
-            };
-        }
+            return passed_time;
+        }  
+        
+        if (secondsEnd > this.work_end) {
+            if (secondsStart < this.work_start) {
+                passed_time = this.work_end - this.work_start;
+            } 
+            if ((this.work_start <= secondsStart) && (secondsStart <= this.work_end)){
+                passed_time = this.work_end - secondsStart;
+            } 
+            return passed_time;
+        } 
     };
 
-/**
-*Проверяем, рабочее ли сейчас время магазина
-*
-*@return {boolean} - true - работает магазин, false - не работает 
-*/
+    /**
+     * 
+     * @return {number} - сколько секунд прошло
+     */
+    Timer.prototype.passedTimeFirstDay = function(startTime) {
+        var startDate = startTime ? new Date(startTime) : new Date(this.dateString), /*startTime*/
+            secondsStart = (startDate.getHours() * 60 + startDate.getMinutes()) * 60 + startDate.getSeconds(), //сколько прошло секунд от 00:00 до принятие заказа пользователем,
+            passed_time = 0;
+        if ( (this.work_start <= secondsStart) && (secondsStart <= this.work_end) ){
+            return this.work_end - secondsStart;
+        }    
+        if (secondsStart < this.work_end) {
+            return this.work_end - this.work_start;
+        }
+        return passed_time;
+    };
+
+    /**
+     * 
+     * @return {number} - сколько секунд прошло
+     */
+    Timer.prototype.passedTimeLastDay = function(endTime) {
+        var /*now*/ endDate   = endTime   ? new Date(endTime)   : new Date(),
+            secondsEnd = (endDate.getHours() * 60 + endDate.getMinutes()) * 60 + endDate.getSeconds(), //сколько прошло секунд от 00:00 до данного момента,
+            passed_time = 0;
+        if ((this.work_start <= secondsEnd) && (secondsEnd <= this.work_end)){
+            return secondsEnd - this.work_start;
+        }
+        if(secondsEnd > this.work_end) {
+            return this.work_end - this.work_start;
+        }
+        return passed_time;
+    };
+
+    /**
+     * Сколько времени прошло в дни(кроме первого и последнего дня)
+     * @param {number} amountOfDays - сколько таких дней
+     */
+    Timer.prototype.passedTimeSimpleWorkDay = function (amountOfDays) {
+        if (amountOfDays === 0){
+            return 0;
+        }
+        var work_day_seconds = this.work_end - this.work_start;
+        return work_day_seconds * amountOfDays;
+    };
+
+    /**
+     * 
+     */
+    Timer.prototype.passedTimeAll = function(options) {
+        options = options || {};
+        startTime = options.startTime || null;
+        endTime = options.endTime || null;
+        amountOfDays = options.amountOfDays;
+        return  this.passedTimeLastDay(endTime) + 
+                this.passedTimeFirstDay(startTime) +
+                this.passedTimeSimpleWorkDay(amountOfDays);
+    };
+
+    /**
+    *Проверяем, рабочее ли сейчас время магазина
+    *
+    *@return {boolean} - true - работает магазин, false - не работает 
+    */
     Timer.prototype.checkWorkTime = function(endTime) {
         var date = endTime ? new Date(endTime) : new Date(),
         day = date.getDay(),
@@ -368,7 +278,7 @@
         }
     };
 
-
+//TODO: пересмотреть данную функцию
     Timer.prototype.findNextWorkTime = function (endTime) {
         var date = endTime ? new Date(endTime) : new Date(),
             getDate = date.getDate();
@@ -378,19 +288,23 @@
             secondsNow = (hours * 60 + minutes) * 60 + seconds, //сколько прошло секунд от 00:00 до данного момента,
             work_start = (this.work_time.start_hour * 60 + this.work_time.start_min) * 60, // сколько сек прошло от 00:00 до начала рабоч дня
             work_end = (this.work_time.end_hour * 60 + this.work_time.end_min) * 60; // сколько сек прошло от 00:00 до конца рабоч дня
-        
+        //сегодня ли рабочий день начнется
         if( (this.weekends.indexOf(getDate) === -1) && (secondsNow < work_end)) {
             return date.setHours(this.work_time.start_hour, this.work_time.start_min, 0, 0); 
         } else {
             Array.prototype.diff = function(a) {
             return this.filter(function(i){return a.indexOf(i) < 0;}); };
-
+            
             var week_array = [0,1,2,3,4,5,6],
                 work_days = week_array.diff(this.weekends),
                 i;
+                console.log(work_days);
+                // TODO: тут какая-то лажа с днями
                 for (i = 0, max = work_days.length; i < max; i++){
                     if( getDate >= work_days[i] ){
-                        date = date.setDay(date.getDay() + (getDate - work_days[i]));
+                        console.log(work_days[i]);
+                        date.setDate(date.getDay() + (getDate - work_days[i]));
+                        console.log(date);
                         date = date.setHours(this.work_time.start_hour, this.work_time.start_min, 0, 0); 
                         return date;
                     }
