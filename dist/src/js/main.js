@@ -7,7 +7,7 @@ time_list = [
         serverTimezone : 7200,
         weekends: [3],
 
-        start_hour: 19,
+        start_hour: 9,
         start_min: 45,
         end_hour: 20,
         end_min: 0
@@ -35,7 +35,7 @@ $confirmationMessageBlock.each(function(index, message){
 
     time_list.forEach(function (time_item) {
         if (time_item.id == request_id) {
-            
+            console.log('llfd');
             var timer = new Timer(time_item);
             //с БД приходит значение времени, соответствующее часовому поясу места нахождения сервера.
             // Переводим время начала отсчета(значение с БД) в часовую зону пользователя
@@ -93,5 +93,5 @@ $confirmationMessageBlock.each(function(index, message){
             }
 
         }
-    })
+    });
 });

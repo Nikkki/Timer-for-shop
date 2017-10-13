@@ -76,20 +76,20 @@
             return {
                 result: false,
                 type: 'error'
-            }
+            };
         }
         if( difference_days < 7){
             return {
                 result: true,
                 type: 'success',
                 difference_days: difference_days
-            }
+            };
         } else {
             return {
                 result: false,
                 type: 'success',
                 difference_days: difference_days
-            }
+            };
         } 
     };
     /*
@@ -109,7 +109,7 @@
             // на выходе days = [4, 5, 6, 0, 1, 2]
         if (getDayStart > getDayEnd) {
             for (i = getDayStart; i < 7; i++){
-                days.push(i)
+                days.push(i);
             }
             for (i = 0; i <= getDayEnd ; i++){
                 days.push(i);
@@ -147,28 +147,28 @@
             work_end = (this.work_time.end_hour * 60 + this.work_time.end_min) * 60;
 
         if ((work_start <= secondsStartTime) && (secondsStartTime <= work_end)) {
-            console.log('==========')
+            console.log('==========');
             if ((secondsEndTime - secondsStartTime < this.time_interval_seconds) && !isToday){
                 return {
                     result: true,
                     passed_time: work_end - secondsStartTime
-                }
+                };
             } else if ((secondsEndTime - secondsStartTime > this.time_interval_seconds) && isToday) {
                 return {
                     result: true,
                     passed_time: secondsEndTime - secondsStartTime
-                }
+                };
             } else {
                 return {
                     result: false
-                }
+                };
             }
         } else {
             if (secondsStartTime < work_start) {
                 return {
                     result: true,
                     passed_time: 0
-                }
+                };
             }
         }
     };
@@ -206,22 +206,22 @@
                     month   === startTime.getMonth() &&
                     year    === startTime.getYear())
                     {
-                        time_left = secondsNow - startTimeSeconds
+                        time_left = secondsNow - startTimeSeconds;
                     } else {
                         return {
                             result: true,
                             time_left : secondsNow - work_start
-                        }
+                        };
                     }
                 if (time_left > this.time_interval_seconds){
                     return {
                         result: false
-                    }
+                    };
                 } else {
                     return {
                         result: true,
                         time_left: this.time_interval_seconds - time_left
-                    }
+                    };
                 }
 
             } else if (passed_time > 0) {
@@ -230,12 +230,12 @@
             if (time_left > this.time_interval_seconds){
                 return {
                     result: false
-                }
+                };
             } else {
                 return {
                     result: true,
                     time_left: this.time_interval_seconds - time_left
-                }
+                };
             }
 
         } else {
@@ -243,11 +243,11 @@
                 return {
                     result: true,
                     time_left: time_left
-                }
+                };
             } else {
                 return {
                     result: false
-                }
+                };
             }
         }
     };
@@ -268,7 +268,7 @@
                 seconds = 59;
                 minutes--;
                 if (timeObj.minutes < 10){
-                    minutes = '0' + timeObj
+                    minutes = '0' + timeObj;
                 } if(timeObj.minutes < 0) {
                     minutes = '00';
                     seconds = '00';
@@ -279,7 +279,7 @@
         return {
             seconds: seconds,
             minutes: minutes
-        }
+        };
     };
 
     Timer.prototype.mainCheck = function (endTime) {
@@ -301,16 +301,16 @@
                             return {
                                 result: true,
                                 time_left: nowTimeChecker.time_left
-                            }
+                            };
                         } else {
                             return {
                                 result: false
-                            }
+                            };
                         }
                     } else {
                         return {
                             result: false
-                        }
+                        };
                     }
                     //значит, что подтверждение от покупателя было, в тот же день, что и магазин зашел к себе на акк
                 } else if (workWeekCheck.difference_days === 0){
@@ -321,26 +321,26 @@
                         return {
                             result: true,
                             time_left: nowTimeChecker.time_left
-                        }
+                        };
                     } else {
                         return {
                             result:  false
-                        }
+                        };
                     }
                 } else {
                     return {
                         result: false
-                    }
+                    };
                 }
             } else {
                 return {
                     result: false
-                }
+                };
             }
         } else {
             return {
                 result: false
-            }
+            };
         }
     };
 
@@ -366,7 +366,7 @@
         } else {
             return false;
         }
-    }
+    };
 
 
     Timer.prototype.findNextWorkTime = function (endTime) {
@@ -396,7 +396,7 @@
                     }
                 }
         }
-    }
+    };
     
     
 
