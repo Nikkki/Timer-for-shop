@@ -193,6 +193,7 @@
             } 
             return passed_time;
         } 
+        return passed_time;
     };
 
     /**
@@ -262,54 +263,57 @@
     Timer.prototype.checkWorkTime = function(endTime) {
         var date = endTime ? new Date(endTime) : new Date(),
         day = date.getDay(),
-        seconds = date.getSeconds(),
-        minutes = date.getMinutes(),
-        hours = date.getHours(),
-        secondsNow = (hours * 60 + minutes) * 60 + seconds, //сколько прошло секунд от 00:00 до данного момента,
-        work_start = (this.work_time.start_hour * 60 + this.work_time.start_min) * 60, // сколько сек прошло от 00:00 до начала рабоч дня
-        work_end = (this.work_time.end_hour * 60 + this.work_time.end_min) * 60; // сколько сек прошло от 00:00 до конца рабоч дня
+        secondsNow = (date.getHours() * 60 + date.getMinutes()) * 60 + date.getSeconds(); //сколько прошло секунд от 00:00 до данного момента,
 
         // рабочий ли сейчас день
         if(this.weekends.indexOf(day) === -1){
             //рабочее ли сейчас время 
-            return (secondsNow >= work_start) && (secondsNow <= work_end) ;
-        } else {
-            return false;
+            return (secondsNow >= this.work_start) && (secondsNow <= this.work_end) ;
         }
+        return false;
+        
     };
 
-//TODO: пересмотреть данную функцию
+/**
+ * Определяем следующий рабочий день
+ */
     Timer.prototype.findNextWorkTime = function (endTime) {
         var date = endTime ? new Date(endTime) : new Date(),
-            getDate = date.getDate();
-            seconds = date.getSeconds(),
-            minutes = date.getMinutes(),
-            hours = date.getHours(),
-            secondsNow = (hours * 60 + minutes) * 60 + seconds, //сколько прошло секунд от 00:00 до данного момента,
-            work_start = (this.work_time.start_hour * 60 + this.work_time.start_min) * 60, // сколько сек прошло от 00:00 до начала рабоч дня
-            work_end = (this.work_time.end_hour * 60 + this.work_time.end_min) * 60; // сколько сек прошло от 00:00 до конца рабоч дня
+            getDay = date.getDay(),
+            secondsNow = date.getSeconds() + 60 * (date.getHours() * 60 + date.getMinutes()); //сколько прошло секунд от 00:00 до данного момента,
         //сегодня ли рабочий день начнется
-        if( (this.weekends.indexOf(getDate) === -1) && (secondsNow < work_end)) {
+        if( (this.weekends.indexOf(getDay) === -1) && (secondsNow < this.work_end)) {
             return date.setHours(this.work_time.start_hour, this.work_time.start_min, 0, 0); 
-        } else {
-            Array.prototype.diff = function(a) {
-            return this.filter(function(i){return a.indexOf(i) < 0;}); };
-            
-            var week_array = [0,1,2,3,4,5,6],
-                work_days = week_array.diff(this.weekends),
-                i;
-                console.log(work_days);
-                // TODO: тут какая-то лажа с днями
-                for (i = 0, max = work_days.length; i < max; i++){
-                    if( getDate >= work_days[i] ){
-                        console.log(work_days[i]);
-                        date.setDate(date.getDay() + (getDate - work_days[i]));
-                        console.log(date);
-                        date = date.setHours(this.work_time.start_hour, this.work_time.start_min, 0, 0); 
-                        return date;
-                    }
-                }
+        } 
+        Array.prototype.diff = function(a) {
+            return this.filter(function(i){return a.indexOf(i) < 0;}); 
+        };
+        
+        var week_array = [0,1,2,3,4,5,6],
+            work_days = week_array.diff(this.weekends),
+            i, work_days_length, days_to_next_work_day, next_work_day;
+
+        work_days_length = work_days.length;
+
+        for ( i = 0; i < work_days_length; i++){
+            if (getDay >= work_days[i]){
+                if (i + 1 === work_days_length) {
+                    next_work_day = work_days[0];
+                    days_to_next_work_day = 7 - getDay - next_work_day; 
+                }                
+                next_work_day = work_days[i + 1];
+                days_to_next_work_day = next_work_day - getDay;
+                break;
+            }      
+            if (getDay < work_days[0]){
+                next_work_day = work_days[0];
+                days_to_next_work_day = next_work_day - getDay;
+                break;
+            }      
         }
+        date.setDate(date.getDate() + days_to_next_work_day);
+        date = date.setHours(this.work_time.start_hour, this.work_time.start_min, 0, 0); 
+        return date;        
     };
     
     

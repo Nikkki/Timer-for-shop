@@ -3,12 +3,12 @@ var $confirmationMessageBlock = $('.js-confirmation-message');
 time_list = [
     {
         id: 113,
-        dateString: '2017-10-13  20:00:00',
+        dateString: '2017-10-14  13:55:00',
         serverTimezone : 7200,
-        weekends: [3],
-        start_hour: 9,
+        weekends: [0,1,2,3,4],
+        start_hour: 12,
         start_min: 0,
-        end_hour: 18,
+        end_hour: 14,
         end_min: 0
     }
 ];
