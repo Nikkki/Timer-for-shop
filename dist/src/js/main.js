@@ -3,12 +3,12 @@ var $confirmationMessageBlock = $('.js-confirmation-message');
 time_list = [
     {
         id: 113,
-        dateString: '2017-10-14  13:55:00',
+        dateString: '2017-10-14  12:55:00',
         serverTimezone : 7200,
-        weekends: [0,1,2,3,4],
-        start_hour: 12,
-        start_min: 0,
-        end_hour: 14,
+        weekends: [0,1,2],
+        start_hour: 17,
+        start_min: 55,
+        end_hour: 18,
         end_min: 0
     }
 ];
@@ -56,10 +56,23 @@ $confirmationMessageBlock.each(function(index, message){
                 }
                 console.log(passed_time);
                 if (passed_time < timer.time_interval_seconds){
-                    console.log('Ok');
                     //Выводим радость
                     if (timer.checkWorkTime()){
-
+                        var time_left = timer.time_interval_seconds - passed_time;
+                        var interval = setInterval(function(){
+                            timer.start(time_left);
+                            
+                            if (!time_left) {
+                                clearInterval(interval);
+                            }
+                            var min = timer.start(time_left).minutes, 
+                                sec = timer.start(time_left).seconds;
+                            $accept_warning.css('opacity', 1);
+    
+                            $min.text(min);
+                            $sec.text(sec);    
+                            time_left--;
+                        }, 1000);
                     } else {
                         var date = new Date(timer.findNextWorkTime());
                         date.setHours(0,0,0,0);

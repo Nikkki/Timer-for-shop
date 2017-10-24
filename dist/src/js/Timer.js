@@ -1,23 +1,26 @@
 // ;(function(){
-    function Timer(opt) {
-        opt = opt || {};
-        this.time = opt.time || 0;
+    function Timer(opts) {
+        //Если конструктор Timer вызван без new 
+        if  (!(this instanceof Timer)) {
+            return new Timer(opts);
+        }
+    
         this.work_time = {  // рабочее время магазина
-            start_hour: opt.start_hour || 9,
-            start_min:  opt.start_min  || 0,
-            end_hour:   opt.end_hour   || 18,
-            end_min:    opt.end_min    || 0
+            start_hour: opts.start_hour === undefined ? 9 : opts.start_hour,
+            start_min:  opts.start_min === undefined ? 0 : opts.start_min,
+            end_hour:   opts.end_hour === undefined ? 18 : opts.end_hour,
+            end_min:    opts.end_min === undefined ? 0 : opts.end_min
         };
         this.work_end = (this.work_time.end_hour * 60 + this.work_time.end_min) * 60; // сколько сек прошло от 00:00 до конца рабоч дня
         
         this.work_start = (this.work_time.start_hour * 60 + this.work_time.start_min) * 60; // сколько сек прошло от 00:00 до начала рабоч дня
         
-        this.weekends = opt.weekends || [6, 0];//выходные дни по-умолчанию - 6-cб, 0-вс.
-        this.serverTimezone = opt.serverTimezone || 7200; // часовой пояс сервера
+        this.weekends = opts.weekends || [6, 0];//выходные дни по-умолчанию - 6-cб, 0-вс.
+        this.serverTimezone = opts.serverTimezone === undefined ? 7200 : opts.serverTimezone; // часовой пояс сервера
 
-        this.time_interval_minutes = opt.time_interval_minutes || 30; //время, которое дается, чтобы принять заказ(в минутах)
+        this.time_interval_minutes = opts.time_interval_minutes === undefined ? 30 : opts.time_interval_minutes; //время, которое дается, чтобы принять заказ(в минутах)
         this.time_interval_seconds = this.time_interval_minutes * 60; //время, которое дается, чтобы принять заказ(в секундах)
-        this.dateString = opt.dateString;
+        this.dateString = opts.dateString;// получаем строку с датой для объекта Date()
     }
 
 
@@ -67,7 +70,8 @@
     };
 
     /** 
-    * Проверяет сколько дней прошло между тем, как пользователь подтвердил, что хочет сделать заказ и тем, как магазин зашел к себе в аккаунт
+    * Проверяет сколько дней прошло между тем, как пользователь подтвердил, 
+    * что хочет сделать заказ и тем, как магазин зашел к себе в аккаунт
     *
     * @param startTime {number} - время в сек от 1января 1970года=), время от которого начался отсчет времени
     * @param now  {number} -      время в сек от 1января 1970года=), время сейчас
@@ -128,7 +132,6 @@
         Array.prototype.diff = function(a) {
             return this.filter(function(i){return a.indexOf(i) < 0;});
         };
-        console.log(days + '   ' +  weekends);
         return days.diff(weekends);
     };
    
@@ -311,7 +314,9 @@
                 break;
             }      
         }
+        //устанавливаем следующий рабочий день
         date.setDate(date.getDate() + days_to_next_work_day);
+        //устанавливаем начало рабочих часов
         date = date.setHours(this.work_time.start_hour, this.work_time.start_min, 0, 0); 
         return date;        
     };
