@@ -96,6 +96,8 @@ describe('timer', () => {
         expect(timer.passedTimeFirstDay(time)).to.equal(0);
     });
 
+    // ------------------------------------------------------------------------
+
     it('How much time was passed if the calculation of time began on the day of settlement', () => {
         const timer = new Timer({
             id: 113,
@@ -110,35 +112,60 @@ describe('timer', () => {
 
         let startTime = '2018-08-22  04:00:00';
         let currentTime = '2018-08-22  04:00:00'
-        expect(timer.passedTimeOneDay(currentTime, startTime)).to.equal(0);
+        expect(timer.passedTimeOneDay(startTime, currentTime)).to.equal(0);
 
         startTime = '2018-08-22 09:00:00';
         currentTime = '2018-08-22 09:00:01';
-        expect(timer.passedTimeOneDay(currentTime, startTime)).to.equal(1);
+        expect(timer.passedTimeOneDay(startTime, currentTime)).to.equal(1);
 
         startTime = '2018-08-22 04:00:00';
         currentTime = '2018-08-22 18:00:00';
-        expect(timer.passedTimeOneDay(currentTime, startTime)).to.equal(32400);
+        expect(timer.passedTimeOneDay(startTime, currentTime)).to.equal(32400);
 
         startTime = '2018-08-22 09:00:00';
         currentTime = '2018-08-22 18:00:00';
-        expect(timer.passedTimeOneDay(currentTime, startTime)).to.equal(32400);
+        expect(timer.passedTimeOneDay(startTime, currentTime)).to.equal(32400);
 
         startTime = '2018-08-22 09:00:00';
         currentTime = '2018-08-22 17:00:00';
-        expect(timer.passedTimeOneDay(currentTime, startTime)).to.equal(28800);
+        expect(timer.passedTimeOneDay(startTime, currentTime)).to.equal(28800);
 
         startTime = '2018-08-22 17:00:00';
         currentTime = '2018-08-22 18:00:01';
-        expect(timer.passedTimeOneDay(currentTime, startTime)).to.equal(3600);
+        expect(timer.passedTimeOneDay(startTime, currentTime)).to.equal(3600);
 
         startTime = '2018-08-22 18:00:01';
         currentTime = '2018-08-22 18:00:02';
-        expect(timer.passedTimeOneDay(currentTime, startTime)).to.equal(0);
+        expect(timer.passedTimeOneDay(startTime, currentTime)).to.equal(0);
 
         startTime = '2018-08-22 08:00:00';
         currentTime = '2018-08-22 18:00:02';
-        expect(timer.passedTimeOneDay(currentTime, startTime)).to.equal(32400);
+        expect(timer.passedTimeOneDay(startTime, currentTime)).to.equal(32400);
+    });
+
+    it('', () => {
+        const timer = new Timer({
+            id: 113,
+            dateString: '2018-08-22  08:00:00',
+            serverTimezone: 10800,
+            weekends: [5, 6],
+            start_hour: 9,
+            start_min: 0,
+            end_hour: 18,
+            end_min: 0
+        });
+        let startTime = '2018-08-17 08:00:00';
+        let currentTime = '2018-08-23 18:00:02';
+        expect(timer.getDifferenceDays(startTime, currentTime)).to.have.members([0, 1, 2, 3, 4]);
+
+        startTime = '2017-10-05 14:00:00';
+        currentTime = '2017-10-10 14:00:00';
+        expect(timer.getDifferenceDays(startTime, currentTime)).to.have.members([4, 0, 1, 2]);
+
+        startTime = '2018-08-23 08:00:00';
+        currentTime = '2018-08-23 18:00:02';
+        expect(timer.getDifferenceDays(startTime, currentTime)).to.have.members([4]);
+
     });
 
 });

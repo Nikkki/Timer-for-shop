@@ -1,14 +1,15 @@
 const $ = require('../lib/jquery-3.2.1');
 const Timer = require('./Timer');
 
+// TODO: написать отдельно красивую отдельно отрисовку таймера
 
 var $confirmationMessageBlock = $('.js-confirmation-message');
 
 time_list = [
     { 
         id: 113,
-        dateString: '2018-08-22  14:55:00',
-        serverTimezone: 7200,
+        dateString: '2018-08-23  12:15:00',
+        serverTimezone: 10800,
         weekends: [0, 1, 2],
         start_hour: 9,
         start_min: 0,
@@ -58,11 +59,12 @@ $confirmationMessageBlock.each(function (index, message) {
                 } else {
                     passed_time = timer.passedTimeAll({ amountOfDays: work_days.length - 2 });
                 }
-                console.log(passed_time);
+                console.log('passed_time', passed_time);
                 if (passed_time < timer.time_interval_seconds) {
-                    //Выводим радость
+                    // Выводим радость
                     if (timer.checkWorkTime()) {
                         var time_left = timer.time_interval_seconds - passed_time;
+                        console.log('time_left', time_left);
                         var interval = setInterval(function () {
                             timer.start(time_left);
 

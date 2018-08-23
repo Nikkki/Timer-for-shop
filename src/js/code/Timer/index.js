@@ -1,4 +1,6 @@
 // ;(function(){
+const { difference } = require('../helpers');
+
 function Timer(opts) {
     //Если конструктор Timer вызван без new 
     if (!(this instanceof Timer)) {
@@ -102,39 +104,39 @@ Timer.prototype.workWeekChecker = function (startTime, now) {
     }
 };
 /**
+ * P.S. нормально работает только если starttime и endtime не больше недели;
+ * 
  * 
  * @param {*} startTime 
  * @param {*} endTime 
  */
 Timer.prototype.getDifferenceDays = function (startTime, endTime) {
 
-    var getDayStart = (new Date(startTime)).getDay(),
-        getDayEnd = (endTime) ? (new Date(endTime)).getDay() : (new Date()).getDay(),
-        weekends = this.weekends,
-        days = [],
-        i;
+    const dayStart = (new Date(startTime)).getDay();
+    const dayEnd = this.generateDate(endTime).getDay();
+    const weekends = this.weekends;
+    let days = [];
     //выделяем дни недели между "конечным" и "начальным" временем
     // Пример:
     // start - "2017-10-05 14:00:00"
     // now   - "2017-10-10 14:00:00"
     // на выходе days = [4, 5, 6, 0, 1, 2]
-    if (getDayStart > getDayEnd) {
-        for (i = getDayStart; i < 7; i++) {
+    // ----------
+
+    if (dayStart > dayEnd) {
+        for (let i = dayStart; i < 7; i++) {
             days.push(i);
         }
-        for (i = 0; i <= getDayEnd; i++) {
+        for (let i = 0; i <= dayEnd; i++) {
             days.push(i);
         }
     } else {
-        for (i = getDayStart; i <= getDayEnd; i++) {
+        for (let i = dayStart; i <= dayEnd; i++) {
             days.push(i);
         }
     }
-    //выделяет элементы массивов, которые различаются
-    Array.prototype.diff = function (a) {
-        return this.filter(function (i) { return a.indexOf(i) < 0; });
-    };
-    return days.diff(weekends);
+
+    return difference(days, weekends);
 };
 
 
@@ -155,7 +157,8 @@ Timer.prototype.start = function (sec) {
             minutes--;
             if (timeObj.minutes < 10) {
                 minutes = '0' + timeObj;
-            } if (timeObj.minutes < 0) {
+            }
+            if (timeObj.minutes < 0) {
                 minutes = '00';
                 seconds = '00';
                 return;
@@ -176,13 +179,13 @@ Timer.prototype.start = function (sec) {
  * @param {string} endTime  - время, когда проходит проверка времени((в формате "2017-10-05 14:00:00"))
  * @return {number} - сколько секунд прошло
  */
-Timer.prototype.passedTimeOneDay = function (endTime, startTime) {
+Timer.prototype.passedTimeOneDay = function (startTime, endTime) {
     const /*now*/ currentDate = this.generateDate(endTime);
     const /*startTime*/startDate = startTime ? new Date(startTime) : new Date(this.dateString);
 
     const secondsEnd = this.getSecFromMidnightToСertainTime(currentDate);
     const secondsStart = this.getSecFromMidnightToСertainTime(startDate);
-   
+
     if (this.isTimeInPeriodOfWorkingHours(currentDate)) {
         if (this.isTimeBeforeStartOfWorkingHours(startDate)) {
             return secondsEnd - this.work_start;
@@ -207,9 +210,9 @@ Timer.prototype.passedTimeOneDay = function (endTime, startTime) {
  * @return {number} startTime - сколько секунд прошло
  */
 Timer.prototype.passedTimeFirstDay = function (startTime) {
-    var startDate = startTime ? new Date(startTime) : new Date(this.dateString), /*startTime*/
-        secondsStart = this.getSecFromMidnightToСertainTime(startDate),
-        passed_time = 0;
+    const startDate = startTime ? new Date(startTime) : new Date(this.dateString); /*startTime*/
+    const secondsStart = this.getSecFromMidnightToСertainTime(startDate);
+    let passed_time = 0;
     if (this.isTimeInPeriodOfWorkingHours(startDate)) {
         return this.work_end - secondsStart;
     }
@@ -241,9 +244,7 @@ Timer.prototype.passedTimeLastDay = function (endTime) {
  * @param {number} amountOfDays - сколько таких дней
  */
 Timer.prototype.passedTimeSimpleWorkDay = function (amountOfDays) {
-    if (amountOfDays === 0) {
-        return 0;
-    }
+    if (amountOfDays === 0) return 0;
     return this.getSecondsInWorkDay() * amountOfDays;
 };
 
@@ -252,9 +253,9 @@ Timer.prototype.passedTimeSimpleWorkDay = function (amountOfDays) {
  */
 Timer.prototype.passedTimeAll = function (options) {
     options = options || {};
-    startTime = options.startTime || null;
-    endTime = options.endTime || null;
-    amountOfDays = options.amountOfDays;
+    const startTime = options.startTime || null;
+    const endTime = options.endTime || null;
+    const amountOfDays = options.amountOfDays;
     return this.passedTimeLastDay(endTime) +
         this.passedTimeFirstDay(startTime) +
         this.passedTimeSimpleWorkDay(amountOfDays);
